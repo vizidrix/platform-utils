@@ -19,13 +19,13 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./coverage
+          #directory: ./coverage
           env_vars: OS,RUST
           fail_ci_if_error: true
           # files: ./coverage1.xml,./coverage2.xml
           flags: unittests
-          name: codecov-umbrella
-          path_to_write_report: ./coverage/lcov.info
+          name: codecov
+          #path_to_write_report: ./coverage/lcov.info
           verbose: true
         # with:
         #   token: ${{ secrets.CODECOV_TOKEN }}
