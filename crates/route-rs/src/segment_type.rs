@@ -1,46 +1,41 @@
-use serde::{ Serialize, Deserialize };
-// use std::borrow::Cow;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq)]
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum SegmentType<'a> {
     /// Exactly matched
+    #[serde(rename = "static")]
     Static {
         #[serde(borrow)]
         path: &'a str,
     },
     /// Convert single segment value into a param with provided key
+    #[serde(rename = "param")]
     Param {
         #[serde(borrow)]
         key: &'a str,
     },
     /// Convert remaining path value into a param with provided key
+    #[serde(rename = "consume")]
     Consume {
         #[serde(borrow)]
         key: &'a str,
     },
     /// Match but discard remaining segments beyond this one
+    #[serde(rename = "wildcard")]
     Wildcard,
 }
 
-// impl<'a> SegmentType<'a> {
-//     fn from_str(src: &'a str) -> Self
-//     // where
-//     //     T: Into<Cow<'a, str>>,
-//     {
-//         // let src = src.into();
-//         if src == "*" { return SegmentType::Wildcard; }
-//         if src.starts_with(':') { return SegmentType::Param { key: &src[1..] }; }
-//         if src.starts_with("*") { return SegmentType::Consume { key: &src[1..] }; }
-//         SegmentType::Static { path: &src }
-//     }
-// }
-
 impl<'a> From<&'a str> for SegmentType<'a> {
     fn from(src: &'a str) -> Self {
-        if src == "*" { return SegmentType::Wildcard; }
-        if src.starts_with(':') { return SegmentType::Param { key: &src[1..] }; }
-        if src.starts_with("*") { return SegmentType::Consume { key: &src[1..] }; }
+        if src == "*" {
+            return SegmentType::Wildcard;
+        }
+        if src.starts_with(':') {
+            return SegmentType::Param { key: &src[1..] };
+        }
+        if src.starts_with("*") {
+            return SegmentType::Consume { key: &src[1..] };
+        }
         SegmentType::Static { path: &src }
     }
 }
@@ -91,5 +86,14 @@ mod should {
     #[test]
     fn parse_wildcard_segment_type() {
         assert_eq!(SegmentType::Wildcard, "*".into());
+    }
+
+    #[test]
+    fn serialization() {
+        let param: SegmentType = ":foo".into();
+        let json = serde_json::to_string(&param).unwrap();
+        assert_eq!("{\"param\":{\"key\":\"foo\"}}", json);
+        let deser = serde_json::from_str(&json).unwrap();
+        assert_eq!(param, deser);
     }
 }

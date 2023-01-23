@@ -5,7 +5,7 @@ test-all:
     cargo test --workspace
 
 cov:
-    cargo llvm-cov --output-path=coverage/lcov.info --lcov
+    cargo llvm-cov --all-features --workspace --lcov --output-path=coverage/lcov.info
 
 cov-html:
     cargo llvm-cov --html

@@ -23,13 +23,5 @@ jobs:
           directory: ./coverage
           env_vars: OS,RUST
           fail_ci_if_error: true
-          # files: ./coverage1.xml,./coverage2.xml
-          # files: ./coverage/lcov.info
-          # flags: unittests
           name: codecov
-          # path_to_write_report: ./coverage/lcov.info
           verbose: true
-        # with:
-        #   token: ${{ secrets.CODECOV_TOKEN }}
-        #   files: lcov.info
-        #   fail_ci_if_error: true

@@ -1,10 +1,9 @@
 ///
 /// 
-// use std::borrow::Cow;
-// use std::collections::HashMap;
+
 use std::ops::Deref;
 
-use crate::{InsertError, SegmentLexer, SegmentType};
+use crate::{InsertError, MatchError, SegmentLexer, SegmentType};
 
 // TODO: Evaluate SmallVec/TinyVec for params and maybe node children
 
@@ -49,16 +48,6 @@ impl<'a> PathRouter<'a> {
             segments: vec![],
             routes: vec![],
         }
-        // let root = Route {
-        //     segment_idx: SegmentIdx(0),
-        //     parent: None,
-        //     children: Vec::new(),
-        // };
-        // PathRouter {
-        //     // segments: vec![SegmentType::Static { path: "" }],
-        //     segments: vec!["".into()],
-        //     routes: vec![root],
-        // }
     }
 
     #[inline]
@@ -79,16 +68,6 @@ impl<'a> PathRouter<'a> {
         })
     }
 
-    // #[inline]
-    // fn insert_root_node(&mut self, segment_idx: SegmentIdx) {
-    //     let root = Route {
-    //         segment_idx,
-    //         parent: None,
-    //         children: Vec::new(),
-    //     };
-    //     self.routes.push(root);
-    // }
-
     #[inline]
     fn insert_root_node(&mut self) {
         let segment = SegmentType::Static { path: "" };
@@ -98,7 +77,6 @@ impl<'a> PathRouter<'a> {
             parent: None,
             children: Vec::new(),
         };
-        
         self.routes.push(root);
     }
 
@@ -139,112 +117,59 @@ impl<'a> PathRouter<'a> {
         if path.len() == 0 {
             return Err(InsertError::EmptyPath);
         }
-        // if path == "/" {
-        //     return Ok(parent_route_idx);
-        // }
-        let lexer = SegmentLexer::new(path);
-        let mut parent_route_idx = RouteIdx(0);
-        let mut segment_idx = SegmentIdx(0);
         // Need to register the root node if it's not already
         if self.routes.len() == 0 {
             self.insert_root_node();
-            // return Ok(parent_route_idx);
         }
+        let mut parent_route_idx = RouteIdx(0);
+        let mut segment_idx = SegmentIdx(0);
+        let lexer = SegmentLexer::new(path);
         for item in lexer {
             // Should not define path following *
-            if *segment_idx > 0 {
-                match self.segments[*segment_idx] {
-                    SegmentType::Consume { .. } | SegmentType::Wildcard => {
-                        return Err(InsertError::TrailingWildcardPath)
-                    }
-                    _ => {}
+            match self.segments[*segment_idx] {
+                SegmentType::Consume { .. } | SegmentType::Wildcard => {
+                    return Err(InsertError::TrailingWildcardPath)
                 }
+                _ => {}
             }
             let (segment, _span) = item?;
             segment_idx = self.get_or_insert_segment(segment);
-            // panic!("{:?}", segment_idx);
-            // if *parent_route_idx == 0 {}
-            // // Need to register the root node if it's not already
-            // if *parent_route_idx == 0 && self.routes.len() == 0 {
-            //     self.insert_root_node(segment_idx);
-            //     // return Ok(parent_route_idx);
-            //     continue;
-            // }
-            // Determine if the segment is already a child of the current node
+            // Setup this segment as the child of the current node
             if let Some(child_route_idx) =
                 self.find_child_node_by_segment(parent_route_idx, segment_idx)
             {
                 parent_route_idx = child_route_idx.clone();
                 continue;
             }
-            // Insert a new child node and proceed
             parent_route_idx = self.insert_new_node_as_child(parent_route_idx, segment_idx);
-            // panic!("{:?}", parent_route_idx);
         }
-        // Err(InsertError::EmptyPath)
         Ok(parent_route_idx)
     }
-//     pub fn insert<T>(&mut self, path: T) -> Result<RouteIdx, InsertError>
-//     where
-//         T: Into<Cow<'a, str>>,
-//     {
-//         let path = path.into();
-//         if path == "" {
-//             return Err(InsertError::EmptyPath);
-//         }
-//         let mut parent_route_idx = RouteIdx(0);
-//         let mut segment_idx = SegmentIdx(0);
-//         for i in 0..path.len() {
-//             path[i]
-//         }
-        
-//         if path == "/" {
-//             return Ok(parent_route_idx);
-//         }
-        
-//         let segments = path.split("/");
-//         // Add a child node for each segment, skipping the root
-//         for segment_str in segments.skip(1) {
-//             // Should not define path following *
-//             match self.segments[*segment_idx] {
-//                 SegmentType::Consume { .. } | SegmentType::Wildcard => {
-//                     return Err(InsertError::TrailingWildcardPath)
-//                 }
-//                 _ => {}
-//             }
-//             let segment: SegmentType = segment_str.into();
-//             segment_idx = self.get_or_insert_segment(segment);
-//             // Determine if the segment is already a child of the current node
-//             if let Some(child_route_idx) =
-//                 self.find_child_node_by_segment(parent_route_idx, segment_idx)
-//             {
-//                 parent_route_idx = child_route_idx.clone();
-//                 continue;
-//             }
-//             // Insert a new child node and proceed
-//             parent_route_idx = self.insert_new_node_as_child(parent_route_idx, segment_idx);
-//         }
-//         Ok(parent_route_idx)
-//     }
 
-//     pub fn eval(&self, path: &str) -> Result<PathMatch, MatchError> {
-//         let _chars = path.chars();
-//         // for i in 0..chars.len() {
-//         //     if chars[i] == "/" {
-//         //         panic!("boundary at {:?}", i);
-//         //     }
-//         // }
-//         // for segment in path.split("/") {}
+    pub fn eval(&self, path: &str) -> Result<PathMatch, MatchError> {
+        let mut index = RouteIdx(0);
+        // let _lexer = SegmentLexer::new(path);
+        // for item in lexer {
+        //     if item.
+        // }
 
-//         Err(MatchError::NotFound)
-//     }
+        // let _chars = path.chars();
+        // for i in 0..chars.len() {
+        //     if chars[i] == "/" {
+        //         panic!("boundary at {:?}", i);
+        //     }
+        // }
+        // for segment in path.split("/") {}
+
+        Err(MatchError::NotFound)
+    }
 }
 
-// #[derive(Clone, Debug)]
-// pub struct PathMatch {
-//     pub route: RouteIdx,
-//     pub params: Option<HashMap<String, String>>,
-// }
+#[derive(Clone, Debug)]
+pub struct PathMatch {
+    pub route: RouteIdx,
+    // pub params: Option<HashMap<String, String>>,
+}
 
 
 #[cfg(test)]
@@ -298,112 +223,15 @@ mod should {
         assert_eq!(2usize, *second);
     }
 
-    // #[test]
-    // fn get_root_node_from_base_path() {
-    //     let router = PathRouter::new();
-    //     let path_match = router.eval("/").unwrap();
-    //     assert_eq!(0usize, *path_match.route);
-    //     assert!(path_match.params.is_none());
-    // }
+    #[test]
+    fn create_third_peer_node_for_nested_child_of_existing_despite_used_key() {
+        let mut router = PathRouter::new();
+        router.insert("/foo").unwrap();
+        router.insert("/bar").unwrap();
+        let third = router.insert("/foo/bar").unwrap();
+        assert_eq!(3usize, *third);
+    }
 }
-
-
-
-
-
-
-
-
-// #[test]
-//     fn contain_single_root_node_and_segment_for_new_router() {
-//         let router = PathRouter::new();
-//         assert_eq!(1, router.segments.len());
-//         assert_eq!(1, router.routes.len());
-//         assert_eq!(SegmentType::Static("".to_owned()), router.segments[0]);
-//         assert_eq!(
-//             Node {
-//                 segment_idx: SegmentIdx(0),
-//                 parent: None,
-//                 children: vec![],
-//             },
-//             router.routes[0]
-//         );
-//     }
-
-// #[test]
-// fn not_change_after_inserting_duplicate_root() {
-//     let mut router = PathRouter::new();
-//     assert_eq!(RouteIdx(0), router.insert("/").unwrap());
-//     assert_eq!(1, router.segments.len());
-//     assert_eq!(1, router.routes.len());
-//     assert_eq!(SegmentType::Static("".to_owned()), router.segments[0]);
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(0),
-//             parent: None,
-//             children: vec![],
-//         },
-//         router.routes[0]
-//     );
-// }
-
-// #[test]
-// fn configure_second_node_for_single_nested_path() {
-//     let mut router = PathRouter::new();
-//     assert_eq!(RouteIdx(1), router.insert("/foo").unwrap());
-//     assert_eq!(2, router.segments.len());
-//     assert_eq!(2, router.routes.len());
-//     assert_eq!(SegmentType::Static("foo".to_owned()), router.segments[1]);
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(0),
-//             parent: None,
-//             children: vec![RouteIdx(1)],
-//         },
-//         router.routes[0]
-//     );
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(1),
-//             parent: Some(RouteIdx(0)),
-//             children: vec![],
-//         },
-//         router.routes[1]
-//     );
-// }
-
-// #[test]
-// fn configure_third_node_for_single_nested_path() {
-//     let mut router = PathRouter::new();
-//     assert_eq!(RouteIdx(2), router.insert("/foo/bar").unwrap());
-//     assert_eq!(3, router.segments.len());
-//     assert_eq!(3, router.routes.len());
-//     assert_eq!(SegmentType::Static("bar".to_owned()), router.segments[2]);
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(0),
-//             parent: None,
-//             children: vec![RouteIdx(1)],
-//         },
-//         router.routes[0]
-//     );
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(1),
-//             parent: Some(RouteIdx(0)),
-//             children: vec![RouteIdx(2)],
-//         },
-//         router.routes[1]
-//     );
-//     assert_eq!(
-//         Node {
-//             segment_idx: SegmentIdx(2),
-//             parent: Some(RouteIdx(1)),
-//             children: vec![],
-//         },
-//         router.routes[2]
-//     );
-// }
 
 // #[test]
 // fn return_error_for_eval_base_path() {
@@ -422,14 +250,4 @@ mod should {
 //     let (_matched_path, params) = router.eval("/").unwrap();
 //     assert_eq!(root_idx.0, 0, "wrong path returned");
 //     assert_eq!(0, params.len(), "too many params returned");
-// }
-
-// #[test]
-// fn return_valid() {
-//     let mut router = PathRouter::new();
-//     // panic!("{:?}", router);
-//     let root_idx = router.insert("/").unwrap();
-//     let foo_idx = router.insert("/foo").unwrap();
-//     let bar_idx = router.insert("/foo/:bar").unwrap();
-//     panic!("{:?} -> {:?} / {:?} / {:?}", router, root_idx, foo_idx, bar_idx);
 // }
