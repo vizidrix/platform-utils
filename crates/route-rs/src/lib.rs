@@ -1,7 +1,11 @@
-mod error;
+// mod error;
 mod lexer;
 mod router;
 
-pub use error::*;
+// pub use error::*;
 pub use lexer::{Lexer, LexerError};
-pub use router::Router;
+pub use router::{Router, RouterError};
+
+pub trait Service {
+    fn handler(&mut self, router: &mut Router, req: Request, env: Env, ctx: worker::Context) -> Result<Response>;
+}
