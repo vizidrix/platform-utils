@@ -24,7 +24,17 @@ impl<'a> Router<'a> {
         }
     }
 
-    pub fn take<const N: usize>(&mut self) -> Result<[&'a str; N], RouterError> {
+    pub fn take<const N: usize>(&mut self) -> [Option<&'a str>; N] {
+        let mut result: [Option<&'a str>; N] = [None; N];
+        for i in 0..N {
+            if let Some(Ok((value, _span))) = self.lexer.next() {
+                result[i] = Some(value);
+            }
+        }
+        result
+    }
+
+    pub fn take_or<const N: usize>(&mut self) -> Result<[&'a str; N], RouterError> {
         let mut result: [&str; N] = [""; N];
         for i in 0..N {
             let (value, _span) = self.lexer.next().ok_or(RouterError::InsufficientSegments)??;
@@ -39,17 +49,64 @@ mod should {
     use super::*;
 
     #[test]
-    fn return_error_when_requesting_too_many_segments() {
+    fn fill_empty_segment_and_none_for_take_from_root_path() {
+        let mut router = Router::new("/");
+        let segments = router.take::<2>();
+        assert_eq!([Some(""), None], segments);
+    }
+
+    #[test]
+    fn fill_all_none_for_take_past_path_end() {
+        let mut router = Router::new("/foo/bar");
+        router.take::<2>();
+        let segments = router.take::<2>();
+        assert_eq!([None, None], segments);
+    }
+
+    #[test]
+    fn fill_all_segments_for_sufficient_path() {
+        let mut router = Router::new("/foo/bar");
+        let segments = router.take::<2>();
+        assert_eq!([Some("foo"), Some("bar")], segments);
+    }
+
+    #[test]
+    fn fill_partial_segments_for_missing_path() {
         let mut router = Router::new("/foo");
-        let err = router.take::<2>().unwrap_err();
+        let segments = router.take::<2>();
+        assert_eq!([Some("foo"), None], segments);
+    }
+
+    #[test]
+    fn match_valid_segment_count_with_all_some() {
+        let mut router = Router::new("/foo/bar");
+        match router.take::<2>() {
+            [Some("foo"), Some("bar")] => {}
+            _ => assert!(false, "should have matched"),
+        }
+    }
+
+    #[test]
+    fn match_short_segment_count_with_padded_none() {
+        let mut router = Router::new("/foo/bar");
+        match router.take::<3>() {
+            [Some("foo"), Some("bar"), None] => {}
+            _ => assert!(false, "should have matched"),
+        }
+    }
+
+    #[test]
+    fn return_error_when_requesting_too_many_segments_with_take_or() {
+        let mut router = Router::new("/foo");
+        let err = router.take_or::<2>().unwrap_err();
         assert_eq!(RouterError::InsufficientSegments, err);
     }
 
     #[test]
-    fn move_to_next_segment_with_each_take() {
+    fn move_to_next_segment_with_each_take_or() {
         let mut router = Router::new("/foo/bar");
-        let first = router.take::<1>().unwrap()[0];
-        let second = router.take::<1>().unwrap()[0];
+        let first = router.take_or::<1>().unwrap()[0];
+        let second = router.take_or::<1>().unwrap()[0];
         assert_eq!("foo", first);
         assert_eq!("bar", second);
     }
