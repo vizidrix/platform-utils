@@ -1,3 +1,6 @@
+#![allow(incomplete_features)]
+#![feature(async_fn_in_trait)]
+
 mod lexer;
 mod router;
 
@@ -9,5 +12,5 @@ use worker::{ Env, Request, Result, Response };
 
 #[cfg(feature="worker")]
 pub trait Service {
-    fn handler(&mut self, router: &mut Router, req: Request, env: Env, ctx: worker::Context) -> Result<Response>;
+    async fn handler(&mut self, router: &mut Router, req: Request, env: Env, ctx: worker::Context) -> Result<Response>;
 }
