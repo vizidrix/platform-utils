@@ -17,12 +17,6 @@ impl From<LexerError> for InsertError {
     }
 }
 
-// impl From<url::ParseError> for InsertError {
-//     fn from(src: url::ParseError) -> InsertError {
-//         InsertError::InvalidPath(None, src.to_string())
-//     }
-// }
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum MatchError {
     NotFound,
