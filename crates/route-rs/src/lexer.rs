@@ -46,7 +46,6 @@ where
         Lexer { src, cursor: 0, t: PhantomData }
     }
 
-    // fn mv(src: &'a str, distance: usize) -> Self {
     fn mv(&self, distance: usize) -> Self {
         let src = self.src;
         Lexer { src, cursor: self.cursor + distance, t: PhantomData  }
@@ -60,18 +59,18 @@ where
         self.src.len() - self.cursor
     }
 
-    pub fn peek(&self) -> Option<Result<(T, usize, Span), LexerError>> {
+    pub fn peek(&self) -> (Self, Option<Result<(T, usize, Span), LexerError>>) {
         let rest = self.rest();
         let len = rest.len();
         if len == 0 {
-            return None;
+            return (Lexer::mv(self, 0), None);
         }
         // Each segment has to start with a leading slash
         if !rest.starts_with('/') {
-            return Some(Err(LexerError::InvalidPath(
+            return (Lexer::mv(self, 0), Some(Err(LexerError::InvalidPath(
                 Some(self.cursor),
                 rest.to_string(),
-            )));
+            ))));
         }
         // Either root slash or a trailing empty slash
         if len == 1 {
@@ -79,7 +78,7 @@ where
                 start: self.cursor,
                 end: self.cursor,
             };
-            return Some(Ok(("".into(), 1, span)))
+            return (Lexer::mv(self, 1), Some(Ok(("".into(), 1, span))))
         }
         // Scan to next slash
         let mut char_indices = rest.char_indices();
@@ -97,19 +96,16 @@ where
             end: self.cursor + distance,
         };
         let segment = rest[1..distance].into();
-        Some(Ok((segment, distance, span)))
+        (Lexer::mv(self, distance), Some(Ok((segment, distance, span))))
     }
 
-    pub fn pop(&self) -> (Self, Option<Result<(T, usize, Span), LexerError>>) {
-        let peek = self.peek();
-        match peek {
-            Some(Ok((item, distance, span))) => {
-                (Lexer::mv(self, distance), Some(Ok((item, distance, span))))
-            },
-            Some(Err(err)) => (Lexer::mv(self, 0), Some(Err(err))),
-            None => (Lexer::mv(self, 0), None),
-        }
-        // (Lexer::mv(self.src, distance))
+    pub fn pop(&mut self) -> Option<Result<(T, usize, Span), LexerError>> {
+        // Look at the next token
+        let (lexer, peek) = self.peek();
+        // Move the lexer reference to the the next position
+        *self = lexer;
+        // Return the peek result
+        peek
     }
 }
 
@@ -120,10 +116,8 @@ where
     type Item = Result<(T, Span), LexerError>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (lexer, peek) = self.pop();
-        match peek {
+        match self.pop() {
             Some(Ok((item, _distance, span))) => {
-                *self = lexer;
                 Some(Ok((item, span)))
             },
             Some(Err(err)) => Some(Err(err)),
