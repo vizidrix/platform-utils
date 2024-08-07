@@ -24,6 +24,20 @@ impl<'a> Router<'a> {
         }
     }
 
+    pub fn peek<const N: usize>(&mut self) -> [Option<&'a str>; N] {
+        let mut result: [Option<&'a str>; N] = [None; N];
+        let mut lexer = None;
+        for i in 0..N {
+            let mylexer = lexer.unwrap_or(self.lexer);
+            let (new_lexer, peek) = mylexer.peek();
+            lexer = Some(new_lexer);
+            if let Some(Ok((value, _distance, _span))) = peek {
+                result[i] = Some(value);
+            }
+        }
+        result
+    }
+
     pub fn take<const N: usize>(&mut self) -> [Option<&'a str>; N] {
         let mut result: [Option<&'a str>; N] = [None; N];
         for i in 0..N {
@@ -53,6 +67,26 @@ mod should {
         let mut router = Router::new("/");
         let segments = router.take::<2>();
         assert_eq!([Some(""), None], segments);
+    }
+
+    #[test]
+    fn not_consume_segments_on_peek() {
+        let mut router = Router::new("/foo/bar");
+        let peek = router.peek::<2>();
+        assert_eq!([Some("foo"), Some("bar")], peek);
+        let peek = router.peek::<2>();
+        assert_eq!([Some("foo"), Some("bar")], peek);
+        let segments = router.take::<2>();
+        assert_eq!([Some("foo"), Some("bar")], segments);
+    }
+
+    #[test]
+    fn not_return_consumed_segments_on_peek() {
+        let mut router = Router::new("/foo/bar");
+        let segments = router.take::<1>();
+        assert_eq!([Some("foo")], segments);
+        let peek = router.peek::<2>();
+        assert_eq!([Some("bar"), None], peek);
     }
 
     #[test]
