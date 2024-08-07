@@ -1,11 +1,14 @@
-mod error;
-// mod http_router;
-mod path_router;
-mod segment_lexer;
-mod segment_type;
+mod lexer;
+mod router;
 
-pub use error::*;
-// pub use http_router::HttpRouter;
-pub use path_router::PathRouter;
-pub use segment_lexer::SegmentLexer;
-pub use segment_type::SegmentType;
+pub use lexer::{Lexer, LexerError};
+pub use router::{Router, RouterError};
+pub use std::future::Future;
+
+#[cfg(feature="worker")]
+use worker::{ Env, Request, Result, Response };
+
+#[cfg(feature="worker")]
+pub trait Service {
+    fn handler(&mut self, router: &mut Router, req: Request, env: Env, ctx: worker::Context) -> impl Future<Output = Result<Response>> + Send;
+}

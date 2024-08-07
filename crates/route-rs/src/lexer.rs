@@ -1,14 +1,16 @@
-use std::marker::PhantomData;
-
 ///
-/// SegmentLexer extracts string sections between forward slashes and
+/// Lexer extracts string sections between forward slashes and
 /// converts them into segment definitions per the rules
 ///
 /// [Lexer Example](https://users.rust-lang.org/t/how-to-write-a-fast-parser-in-idiomatic-rust/49927/2)
 /// [Token Scanning Examples](https://petermalmgren.com/token-scanning-with-rust/)
 ///
-use crate::InsertError;
-// use crate::SegmentType;
+use std::marker::PhantomData;
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum LexerError {
+    InvalidPath(Option<usize>, String),
+}
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Span {
@@ -16,7 +18,8 @@ pub struct Span {
     end: usize,
 }
 
-pub struct SegmentLexer<'a, T>
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Lexer<'a, T = String>
 where
     T: From<&'a str>,
 {
@@ -25,12 +28,12 @@ where
     t: PhantomData<T>,
 }
 
-impl<'a, T> SegmentLexer<'a, T>
+impl<'a, T> Lexer<'a, T>
 where
     T: From<&'a str>,
 {
     pub fn new(src: &'a str) -> Self {
-        SegmentLexer { src, cursor: 0, t: PhantomData }
+        Lexer { src, cursor: 0, t: PhantomData }
     }
 
     pub fn rest(&self) -> &'a str {
@@ -38,11 +41,11 @@ where
     }
 }
 
-impl<'a, T> Iterator for SegmentLexer<'a, T>
+impl<'a, T> Iterator for Lexer<'a, T>
 where
     T: From<&'a str>,
 {
-    type Item = Result<(T, Span), InsertError>;
+    type Item = Result<(T, Span), LexerError>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let rest = self.rest();
@@ -52,14 +55,20 @@ where
         }
         // Each segment has to start with a leading slash
         if !rest.starts_with('/') {
-            return Some(Err(InsertError::InvalidPath(
+            return Some(Err(LexerError::InvalidPath(
                 Some(self.cursor),
                 rest.to_string(),
             )));
         }
         // Either root slash or a trailing empty slash
         if len == 1 {
-            return None;
+            // return None;
+            let span = Span {
+                start: self.cursor,
+                end: self.cursor,
+            };
+            self.cursor += 1;
+            return Some(Ok(("".into(), span)))
         }
         // Scan to next slash
         let mut char_indices = rest.char_indices();
@@ -95,21 +104,26 @@ mod should {
 
     #[test]
     fn return_single_none_for_empty_string() {
-        let mut lexer = SegmentLexer::<'_, String>::new("");
+        let mut lexer = Lexer::<'_, String>::new("");
         assert_eq!(None, lexer.next());
     }
 
     #[test]
     fn return_invalid_path_error_for_missing_leading_slash() {
-        let expected = Err(InsertError::InvalidPath(Some(0), "foo".to_owned()));
-        let mut lexer = SegmentLexer::<'_, String>::new("foo");
+        let expected = Err(LexerError::InvalidPath(Some(0), "foo".to_owned()));
+        let mut lexer = Lexer::<'_, String>::new("foo");
         assert_eq!(Some(expected), lexer.next());
     }
 
     #[test]
-    fn parse_bare_root_as_none() {
-        let mut lexer = SegmentLexer::<'_, String>::new("/");
-        assert_eq!(None, lexer.next());
+    fn parse_bare_root_as_empty_str() {
+        let expected = vec![(
+            "".to_owned(),
+            Span { start: 0, end: 0 },
+        )];
+        let lexer = Lexer::new("/");
+        let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
+        assert_eq!(expected, values);
     }
 
     #[test]
@@ -118,7 +132,7 @@ mod should {
             "foo".to_owned(),
             Span { start: 1, end: 4 },
         )];
-        let lexer = SegmentLexer::new("/foo");
+        let lexer = Lexer::new("/foo");
         let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
         assert_eq!(expected, values);
     }
@@ -129,7 +143,7 @@ mod should {
             ":foo".to_owned(),
             Span { start: 1, end: 5 }
         )];
-        let lexer = SegmentLexer::new("/:foo");
+        let lexer = Lexer::new("/:foo");
         let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
         assert_eq!(expected, values);
     }
@@ -140,7 +154,7 @@ mod should {
             "*foo".to_owned(),
             Span { start: 1, end: 5 },
         )];
-        let lexer = SegmentLexer::new("/*foo");
+        let lexer = Lexer::new("/*foo");
         let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
         assert_eq!(expected, values);
     }
@@ -151,7 +165,7 @@ mod should {
             "*",
             Span { start: 1, end: 2 }
         )];
-        let lexer = SegmentLexer::new("/*");
+        let lexer = Lexer::new("/*");
         let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
         assert_eq!(expected, values);
     }
@@ -168,7 +182,7 @@ mod should {
                 Span { start: 5, end: 9 },
             ),
         ];
-        let lexer = SegmentLexer::new("/foo/:bar");
+        let lexer = Lexer::new("/foo/:bar");
         let values = lexer.collect::<Result<Vec<_>, _>>().unwrap();
         assert_eq!(expected, values);
     }
