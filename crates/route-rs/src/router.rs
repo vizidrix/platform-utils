@@ -26,16 +26,11 @@ impl<'a> Router<'a> {
 
     pub fn peek<const N: usize>(&mut self) -> [Option<&'a str>; N] {
         let mut result: [Option<&'a str>; N] = [None; N];
-        // let mut i = 0;
-        // while i < N {
-        //     i += 1;
-        // }
         let mut lexer = None;
         for i in 0..N {
             let mylexer = lexer.unwrap_or(self.lexer);
             let (new_lexer, peek) = mylexer.peek();
             lexer = Some(new_lexer);
-            // if let Some(Ok((value, _distance, _span))) = self.lexer.peek() {
             if let Some(Ok((value, _distance, _span))) = peek {
                 result[i] = Some(value);
             }
