@@ -6,7 +6,7 @@
 		"args": { 
 			// Append -bullseye or -buster to pin to an OS version.
 			// Use -bullseye variants on local on arm64/Apple Silicon.
-			"VARIANT": "bullseye",
+			"VARIANT": "bookworm",
 			// Options
 			// "NODE_VERSION": "lts/*"
 		}
