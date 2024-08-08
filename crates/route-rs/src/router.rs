@@ -38,7 +38,7 @@ impl<'a> Router<'a> {
         result
     }
 
-    pub fn take<const N: usize>(&mut self) -> [Option<&'a str>; N] {
+    pub fn consume<const N: usize>(&mut self) -> [Option<&'a str>; N] {
         let mut result: [Option<&'a str>; N] = [None; N];
         for i in 0..N {
             if let Some(Ok((value, _span))) = self.lexer.next() {
@@ -48,7 +48,7 @@ impl<'a> Router<'a> {
         result
     }
 
-    pub fn take_or<const N: usize>(&mut self) -> Result<[&'a str; N], RouterError> {
+    pub fn try_consume<const N: usize>(&mut self) -> Result<[&'a str; N], RouterError> {
         let mut result: [&str; N] = [""; N];
         for i in 0..N {
             let (value, _span) = self.lexer.next().ok_or(RouterError::InsufficientSegments)??;
@@ -58,14 +58,33 @@ impl<'a> Router<'a> {
     }
 }
 
+impl<'a> Iterator for Router<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.lexer.next() {
+            Some(Ok((item, _span))) => Some(item),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod should {
     use super::*;
 
     #[test]
+    fn convert_lexer_error_to_router_error() {
+        let lexer_err = LexerError::InvalidPath(Some(3), "foo".to_owned());
+        let inner_err = lexer_err.to_owned();
+        let router_err: RouterError = lexer_err.into();
+        assert_eq!(RouterError::Lexer(inner_err), router_err);
+    }
+
+    #[test]
     fn fill_empty_segment_and_none_for_take_from_root_path() {
         let mut router = Router::new("/");
-        let segments = router.take::<2>();
+        let segments = router.consume::<2>();
         assert_eq!([Some(""), None], segments);
     }
 
@@ -76,14 +95,14 @@ mod should {
         assert_eq!([Some("foo"), Some("bar")], peek);
         let peek = router.peek::<2>();
         assert_eq!([Some("foo"), Some("bar")], peek);
-        let segments = router.take::<2>();
+        let segments = router.consume::<2>();
         assert_eq!([Some("foo"), Some("bar")], segments);
     }
 
     #[test]
     fn not_return_consumed_segments_on_peek() {
         let mut router = Router::new("/foo/bar");
-        let segments = router.take::<1>();
+        let segments = router.consume::<1>();
         assert_eq!([Some("foo")], segments);
         let peek = router.peek::<2>();
         assert_eq!([Some("bar"), None], peek);
@@ -92,56 +111,71 @@ mod should {
     #[test]
     fn fill_all_none_for_take_past_path_end() {
         let mut router = Router::new("/foo/bar");
-        router.take::<2>();
-        let segments = router.take::<2>();
+        router.consume::<2>();
+        let segments = router.consume::<2>();
         assert_eq!([None, None], segments);
     }
 
     #[test]
     fn fill_all_segments_for_sufficient_path() {
         let mut router = Router::new("/foo/bar");
-        let segments = router.take::<2>();
+        let segments = router.consume::<2>();
         assert_eq!([Some("foo"), Some("bar")], segments);
     }
 
     #[test]
     fn fill_partial_segments_for_missing_path() {
         let mut router = Router::new("/foo");
-        let segments = router.take::<2>();
+        let segments = router.consume::<2>();
         assert_eq!([Some("foo"), None], segments);
     }
 
     #[test]
     fn match_valid_segment_count_with_all_some() {
         let mut router = Router::new("/foo/bar");
-        match router.take::<2>() {
-            [Some("foo"), Some("bar")] => {}
-            _ => assert!(false, "should have matched"),
-        }
+        let segments = router.consume::<2>();
+        assert_eq!(segments[0], Some("foo"));
+        assert_eq!(segments[1], Some("bar"));
     }
 
     #[test]
     fn match_short_segment_count_with_padded_none() {
         let mut router = Router::new("/foo/bar");
-        match router.take::<3>() {
-            [Some("foo"), Some("bar"), None] => {}
-            _ => assert!(false, "should have matched"),
-        }
+        let segments = router.consume::<3>();
+        assert_eq!(segments[0], Some("foo"));
+        assert_eq!(segments[1], Some("bar"));
+        assert_eq!(segments[2], None);
     }
 
     #[test]
     fn return_error_when_requesting_too_many_segments_with_take_or() {
         let mut router = Router::new("/foo");
-        let err = router.take_or::<2>().unwrap_err();
+        let err = router.try_consume::<2>().unwrap_err();
         assert_eq!(RouterError::InsufficientSegments, err);
     }
 
     #[test]
     fn move_to_next_segment_with_each_take_or() {
         let mut router = Router::new("/foo/bar");
-        let first = router.take_or::<1>().unwrap()[0];
-        let second = router.take_or::<1>().unwrap()[0];
+        let first = router.try_consume::<1>().unwrap()[0];
+        let second = router.try_consume::<1>().unwrap()[0];
         assert_eq!("foo", first);
         assert_eq!("bar", second);
+    }
+
+    #[test]
+    fn walk_segments_from_router_as_iterator() {
+        let router = Router::new("/foo/bar");
+        let segments = router.into_iter().collect::<Vec<_>>();
+        assert_eq!(2, segments.len());
+        assert_eq!(segments[0], "foo");
+        assert_eq!(segments[1], "bar");
+    }
+
+    #[test]
+    fn return_error_from_router_as_iterator() {
+        let router = Router::new("");
+        let segments = router.into_iter().collect::<Vec<_>>();
+        assert_eq!(0, segments.len());
     }
 }

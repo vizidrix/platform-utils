@@ -1,6 +1,6 @@
 # Setup the development container image
 
-ARG VARIANT="bullseye"
+ARG VARIANT="bookworm"
 FROM mcr.microsoft.com/vscode/devcontainers/rust:1-${VARIANT}
 
 # https://github.com/docker-library/buildpack-deps/blob/65d69325ad741cea6dee20781c1faaab2e003d87/debian/bullseye/curl/Dockerfile
@@ -115,10 +115,12 @@ USER vscode
 # Install and configure nvm / node
 
 # Setup nvm environment variables
-ENV NODE_VERSION 19.3.0
+# ENV NODE_VERSION 19.3.0
+ENV NODE_VERSION 22.6.0
 
 ENV NVM_DIR="/bin/.nvm"
-RUN mkdir -p $NVM_DIR
+RUN sudo mkdir -p $NVM_DIR
+RUN sudo chown -R vscode $NVM_DIR
 
 # Install nvm from vendored script instead of:
 # RUN curl --silent -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
