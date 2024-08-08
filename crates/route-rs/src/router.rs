@@ -59,13 +59,12 @@ impl<'a> Router<'a> {
 }
 
 impl<'a> Iterator for Router<'a> {
-    type Item = Result<&'a str, RouterError>;
+    type Item = &'a str;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.lexer.next() {
-            Some(Ok((item, _span))) => Some(Ok(item)),
-            Some(Err(err)) => Some(Err(err.into())),
-            None => None,
+            Some(Ok((item, _span))) => Some(item),
+            _ => None,
         }
     }
 }
@@ -73,6 +72,14 @@ impl<'a> Iterator for Router<'a> {
 #[cfg(test)]
 mod should {
     use super::*;
+
+    #[test]
+    fn convert_lexer_error_to_router_error() {
+        let lexer_err = LexerError::InvalidPath(Some(3), "foo".to_owned());
+        let inner_err = lexer_err.to_owned();
+        let router_err: RouterError = lexer_err.into();
+        assert_eq!(RouterError::Lexer(inner_err), router_err);
+    }
 
     #[test]
     fn fill_empty_segment_and_none_for_take_from_root_path() {
@@ -126,19 +133,18 @@ mod should {
     #[test]
     fn match_valid_segment_count_with_all_some() {
         let mut router = Router::new("/foo/bar");
-        match router.consume::<2>() {
-            [Some("foo"), Some("bar")] => {}
-            _ => assert!(false, "should have matched"),
-        }
+        let segments = router.consume::<2>();
+        assert_eq!(segments[0], Some("foo"));
+        assert_eq!(segments[1], Some("bar"));
     }
 
     #[test]
     fn match_short_segment_count_with_padded_none() {
         let mut router = Router::new("/foo/bar");
-        match router.consume::<3>() {
-            [Some("foo"), Some("bar"), None] => {}
-            _ => assert!(false, "should have matched"),
-        }
+        let segments = router.consume::<3>();
+        assert_eq!(segments[0], Some("foo"));
+        assert_eq!(segments[1], Some("bar"));
+        assert_eq!(segments[2], None);
     }
 
     #[test]
@@ -155,5 +161,21 @@ mod should {
         let second = router.try_consume::<1>().unwrap()[0];
         assert_eq!("foo", first);
         assert_eq!("bar", second);
+    }
+
+    #[test]
+    fn walk_segments_from_router_as_iterator() {
+        let router = Router::new("/foo/bar");
+        let segments = router.into_iter().collect::<Vec<_>>();
+        assert_eq!(2, segments.len());
+        assert_eq!(segments[0], "foo");
+        assert_eq!(segments[1], "bar");
+    }
+
+    #[test]
+    fn return_error_from_router_as_iterator() {
+        let router = Router::new("");
+        let segments = router.into_iter().collect::<Vec<_>>();
+        assert_eq!(0, segments.len());
     }
 }
