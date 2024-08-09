@@ -1,0 +1,7 @@
+[package]
+name = "q-rs"
+version = "0.1.0"
+authors = ["Perry Birch <perrysd@gmail.com>"]
+edition = "2021"
+
+[dependencies]

@@ -1,5 +1,7 @@
 [workspace]
 
 members = [
+    "crates/q-rs",
+    "crates/recode-rs",
     "crates/route-rs",
 ]
