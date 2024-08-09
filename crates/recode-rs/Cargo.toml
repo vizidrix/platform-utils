@@ -1,5 +1,5 @@
 [package]
-name = "recoder"
+name = "recode-rs"
 version = "0.1.0"
 authors = ["Perry Birch <perrysd@gmail.com>"]
 edition = "2021"
