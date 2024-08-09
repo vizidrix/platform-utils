@@ -1,8 +1,10 @@
+cargo-features = ["edition2024"]
+
 [package]
 name = "route-rs"
 version = "0.1.1"
 authors = ["Perry Birch <perrysd@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 serde = { version = "1.0.204", features = ["derive"] }

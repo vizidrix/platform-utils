@@ -1,5 +1,9 @@
 [workspace]
 
+resolver = "3"
+
 members = [
+    "crates/q-rs",
+    "crates/recode-rs",
     "crates/route-rs",
 ]

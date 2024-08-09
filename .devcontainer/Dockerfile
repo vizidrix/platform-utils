@@ -1,6 +1,6 @@
 # Setup the development container image
 
-ARG VARIANT="bullseye"
+ARG VARIANT="bookworm"
 FROM mcr.microsoft.com/vscode/devcontainers/rust:1-${VARIANT}
 
 # https://github.com/docker-library/buildpack-deps/blob/65d69325ad741cea6dee20781c1faaab2e003d87/debian/bullseye/curl/Dockerfile
