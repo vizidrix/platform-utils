@@ -10,7 +10,7 @@ pub enum QrPngError {
     QrError(q_rs::QrError),
 }
 
-impl core::error::Error for QrPngError {}
+impl std::error::Error for QrPngError {}
 
 impl From<ImageError> for QrPngError {
     fn from(src: ImageError) -> Self {
