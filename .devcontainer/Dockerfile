@@ -115,7 +115,8 @@ USER vscode
 # Install and configure nvm / node
 
 # Setup nvm environment variables
-ENV NODE_VERSION 19.3.0
+# ENV NODE_VERSION 19.3.0
+ENV NODE_VERSION 22.6.0
 
 ENV NVM_DIR="/bin/.nvm"
 RUN sudo mkdir -p $NVM_DIR

@@ -18,16 +18,6 @@ pub struct Span {
     end: usize,
 }
 
-impl Span {
-    pub fn distance(&self) -> usize {
-        if self.start == self.end {
-            1
-        } else {
-            self.end - self.start
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lexer<'a, T = String>
 where
@@ -54,11 +44,7 @@ where
     pub fn rest(&self) -> &'a str {
         &self.src[self.cursor..]
     }
-
-    pub fn remaining(&self) -> usize {
-        self.src.len() - self.cursor
-    }
-
+    
     pub fn peek(&self) -> (Self, Option<Result<(T, usize, Span), LexerError>>) {
         let rest = self.rest();
         let len = rest.len();
