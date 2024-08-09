@@ -2,6 +2,7 @@
 
 members = [
     "crates/q-rs",
+    "crates/q-rs-png",
     "crates/recode-rs",
     "crates/route-rs",
 ]
