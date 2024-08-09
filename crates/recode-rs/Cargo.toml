@@ -1,0 +1,11 @@
+cargo-features = ["edition2024"]
+
+[package]
+name = "recoder"
+version = "0.1.0"
+authors = ["Perry Birch <perrysd@gmail.com>"]
+edition = "2024"
+
+[dependencies]
+image = { version = "0.25.2", default-features = false, features = [ "gif", "jpeg", "png", "webp" ] }
+imageproc = { version = "0.25.0", default-features = false }
