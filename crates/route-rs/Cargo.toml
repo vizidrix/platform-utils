@@ -1,4 +1,6 @@
-cargo-features = ["edition2024"]
+cargo-features = [
+    "edition2024"
+]
 
 [package]
 name = "route-rs"
