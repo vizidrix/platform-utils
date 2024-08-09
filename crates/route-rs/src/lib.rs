@@ -10,5 +10,5 @@ use worker::{ Env, Request, Result, Response };
 
 #[cfg(feature="worker")]
 pub trait Service {
-    fn handler(&mut self, router: &mut Router, req: Request, env: Env, ctx: worker::Context) -> impl Future<Output = Result<Response>> + Send;
+    fn handler(&mut self, router: &mut Router, req: &mut Request, env: Env, ctx: worker::Context) -> impl Future<Output = Result<Response>> + Send;
 }
