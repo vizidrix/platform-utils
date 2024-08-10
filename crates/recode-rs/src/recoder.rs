@@ -3,8 +3,10 @@ use crate::{Error, Format, Meta, Outcome};
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::codecs::webp::WebPEncoder;
 use image::{
-    guess_format, load_from_memory, ColorType, EncodableLayout, ExtendedColorType, ImageEncoder, ImageFormat
+    guess_format, load_from_memory, EncodableLayout, ImageEncoder, ImageFormat
 };
+use internal_tests::PngData;
+use oxipng::*;
 
 /// Some formats available from the image library aren't supported natively but could be
 /// pre-processed into one of the supported formats via a separate process.
@@ -83,6 +85,46 @@ impl Recoder {
             src_meta,
             dest_meta,
             out_buffer.as_bytes().to_vec(),
+        ))
+    }
+
+    pub fn to_webp_enhanced(&self, buffer: &[u8]) -> Result<Outcome, Error> {
+        let base_webp = self.to_webp(buffer)?;
+        // let options = Options {
+        //     fix_errors: false,
+        //     force: false,
+        //     filter: indexset! {RowFilter::None, RowFilter::Sub, RowFilter::Entropy, RowFilter::Bigrams},
+        //     interlace: Some(Interlacing::None),
+        //     optimize_alpha: false,
+        //     bit_depth_reduction: true,
+        //     color_type_reduction: true,
+        //     palette_reduction: true,
+        //     grayscale_reduction: true,
+        //     idat_recoding: true,
+        //     scale_16: false,
+        //     strip: StripChunks::None,
+        //     deflate: Deflaters::Libdeflater { compression: 11 },
+        //     fast_evaluation: true,
+        //     timeout: None,
+        // };
+        // Create custom options for Oxipng
+        let options = Options {
+            // strip: Some(oxipng::Metadata::All),
+            strip: StripChunks::All,
+            // interlace: Some(1),
+            interlace: Some(Interlacing::Adam7),
+            // compression: Deflate::new(9),
+            deflate: Deflaters::Libdeflater { compression: 9 },
+            // filter: vec![FilterType::Paeth],
+            filter: indexset! {RowFilter::None, RowFilter::Sub, RowFilter::Entropy, RowFilter::Bigrams},
+            ..Options::default()
+        };
+        let png_data = PngData::from_slice(&base_webp.data, &options)?;
+        let output = png_data.output();
+        Ok(Outcome::new(
+            base_webp.src,
+            base_webp.dest,
+            output,
         ))
     }
 }
