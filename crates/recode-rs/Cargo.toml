@@ -7,3 +7,4 @@ edition = "2021"
 [dependencies]
 image = { version = "0.25.2", default-features = false, features = [ "gif", "jpeg", "png", "webp" ] }
 imageproc = { version = "0.25.0", default-features = false }
+oxipng = { version = "9.0", features = ["parallel", "zopfli", "filetime"], default-features = false }
