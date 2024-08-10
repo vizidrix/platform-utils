@@ -1,8 +1,9 @@
 use crate::{Error, Format, Meta, Outcome};
 
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
+use image::codecs::webp::WebPEncoder;
 use image::{
-    guess_format, load_from_memory, ExtendedColorType, EncodableLayout, ImageEncoder, ImageFormat,
+    guess_format, load_from_memory, ColorType, EncodableLayout, ExtendedColorType, ImageEncoder, ImageFormat
 };
 
 /// Some formats available from the image library aren't supported natively but could be
@@ -30,7 +31,7 @@ impl Recoder {
         Recoder {}
     }
 
-    pub fn convert(&self, buffer: &[u8]) -> Result<Outcome, Error> {
+    pub fn to_png(&self, buffer: &[u8]) -> Result<Outcome, Error> {
         // Try to get the image format
         let format = guess_image_format(buffer)?;
         // Try to load an unknown blob of image data
@@ -39,20 +40,44 @@ impl Recoder {
         // Capture the input image metadata
         let src_meta = Meta::new(format, width, height);
         // Convert the imported photo data into the desired 16 bit depth
-        let image_16bit = dynamic_image.into_rgba16();
+        // let image_16bit = dynamic_image.into_rgba16();
         // Make a buffer to write into
         let mut out_buffer = Vec::<u8>::new();
         // Setup the encoder with fast and no filter to try and avoid any compression or other data loss
         let png_encoder = PngEncoder::new_with_quality(
             &mut out_buffer,
-            CompressionType::Fast,
+            CompressionType::Best,
             FilterType::NoFilter,
         );
         // Try to write the image as a PNG to the buffer
         // png_encoder.write_image(image_16bit.as_bytes(), width, height, ColorType::Rgba16)?;
-        png_encoder.write_image(image_16bit.as_bytes(), width, height, ExtendedColorType::Rgba16)?;
+        // png_encoder.write_image(image_16bit.as_bytes(), width, height, ExtendedColorType::Rgba16)?;
+        png_encoder.write_image(dynamic_image.as_bytes(), width, height, dynamic_image.color().into())?;
         // Describe the output image metadata
         let dest_meta = Meta::new(Format::Png, width, height);
+        // Return the result of the recoding process
+        Ok(Outcome::new(
+            src_meta,
+            dest_meta,
+            out_buffer.as_bytes().to_vec(),
+        ))
+    }
+
+    pub fn to_webp(&self, buffer: &[u8]) -> Result<Outcome, Error> {
+        // Try to get the image format
+        let format = guess_image_format(buffer)?;
+        // Try to load an unknown blob of image data
+        let dynamic_image = load_from_memory(buffer).map_err(|_| Error::LoadError)?;
+        let (width, height) = (dynamic_image.width(), dynamic_image.height());
+        // Capture the input image metadata
+        let src_meta = Meta::new(format, width, height);
+        // Make a buffer to write into
+        let mut out_buffer = Vec::<u8>::new();
+        let webp_encoder = WebPEncoder::new_lossless(&mut out_buffer);
+        // Try to write the image as a WebP to the buffer
+        webp_encoder.write_image(dynamic_image.as_bytes(), width, height, dynamic_image.color().into())?;
+        // Describe the output image metadata
+        let dest_meta = Meta::new(Format::WebP, width, height);
         // Return the result of the recoding process
         Ok(Outcome::new(
             src_meta,
