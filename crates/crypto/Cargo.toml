@@ -1,0 +1,20 @@
+[package]
+name = "crypto"
+version = "0.1.0"
+authors = ["Perry Birch <perrysd@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+
+[dependencies.ring]
+# git = "https://github.com/briansmith/ring"
+version = "0.17.8"
+default-features = false
+
+[features]
+default = [
+    "wasm32"
+]
+wasm32 = [
+    "ring/wasm32_unknown_unknown_js"
+]

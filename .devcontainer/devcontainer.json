@@ -6,7 +6,7 @@
 		"args": { 
 			// Append -bullseye or -buster to pin to an OS version.
 			// Use -bullseye variants on local on arm64/Apple Silicon.
-			"VARIANT": "bookworm",
+			"VARIANT": "bookworm"
 			// Options
 			// "NODE_VERSION": "lts/*"
 		}
@@ -28,15 +28,14 @@
 			// Add the IDs of extensions you want installed when the container is created.
 			"extensions": [
 				"ms-azuretools.vscode-docker",
-				"ms-azuretools.vscode-azurefunctions",
-				"ms-azuretools.vscode-azurestaticwebapps",
-				"ms-azuretools.vscode-cosmosdb",
 				"ms-vsliveshare.vsliveshare-pack",
 				"github.vscode-pull-request-github",
-				"GitHub.copilot",
 				"editorconfig.editorconfig",
 				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode"
+				"esbenp.prettier-vscode",
+				"panicbit.cargo",
+				"1yib.rust-bundle",
+				"tamasfe.even-better-toml"
 			]
 		}
 	},
@@ -45,12 +44,12 @@
 	// "forwardPorts": [9000],
 
 	// Use 'portsAttributes' to set default properties for specific forwarded ports. More info: https://code.visualstudio.com/docs/remote/devcontainerjson-reference.
-	"portsAttributes": {
-		"9000": {
-			"label": "Hello Remote World",
-			"onAutoForward": "notify"
-		}
-	},
+	// "portsAttributes": {
+	// 	"9000": {
+	// 		"label": "Hello Remote World",
+	// 		"onAutoForward": "notify"
+	// 	}
+	// },
 
 	// Use 'otherPortsAttributes' to configure any ports that aren't configured using 'portsAttributes'.
 	// "otherPortsAttributes": {

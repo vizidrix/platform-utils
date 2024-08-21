@@ -1,6 +1,8 @@
 [workspace]
 
 members = [
+    "crates/crypto",
+    "crates/mailchannel",
     "crates/q-rs",
     "crates/q-rs-png",
     "crates/recode-rs",

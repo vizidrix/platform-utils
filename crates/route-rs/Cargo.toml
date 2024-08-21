@@ -5,7 +5,7 @@ authors = ["Perry Birch <perrysd@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-serde = { version = "1.0.204", features = ["derive"] }
+serde = { version = "1.0.205", features = ["derive"] }
 url = "2.5.2"
 worker = { version = "0.3.3", optional = true }
 
