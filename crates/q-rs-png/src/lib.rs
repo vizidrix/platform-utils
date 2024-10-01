@@ -64,6 +64,12 @@ impl Default for ColorTemplate {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DensityVersion(u8);
 
+impl DensityVersion {
+    pub fn new(value: u8) -> Self {
+        DensityVersion(value)
+    }
+}
+
 impl Default for DensityVersion {
     fn default() -> Self {
         DensityVersion(1)
@@ -123,19 +129,19 @@ impl From<ErrorCorrection> for CodeEcc {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct QROptions {
     // Sets the colors used for the foreground and background
-    color_template: Option<ColorTemplate>,
+    pub color_template: Option<ColorTemplate>,
     // Sets the minimum block density of the QR
-    min_version: Option<DensityVersion>,
+    pub min_version: Option<DensityVersion>,
     // Sets the maximum density of the QR
-    max_version: Option<DensityVersion>,
+    pub max_version: Option<DensityVersion>,
     // Determines the number of failing blocks for error correction
-    error_correction: Option<ErrorCorrection>,
+    pub error_correction: Option<ErrorCorrection>,
     // Defines the default size of each block in the QR
-    scale: Option<u8>,
+    pub scale: Option<u8>,
     // Specify the mask if desired
-    mask: Option<u8>,
+    pub mask: Option<u8>,
     // True automatically optimizes the error correction within version bounds if possible
-    boost_ecl: bool,
+    pub boost_ecl: bool,
 }
 
 impl Default for QROptions {
