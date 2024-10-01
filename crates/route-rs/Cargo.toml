@@ -1,21 +1,12 @@
 [package]
 name = "route-rs"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Perry Birch <perrysd@gmail.com>"]
 edition = "2021"
 
 [dependencies]
 serde = { version = "1.0.205", features = ["derive"] }
 url = "2.5.2"
-worker = { version = "0.3.3", optional = true }
 
 [dev-dependencies]
 serde_json = "1.0.122"
-
-[features]
-default = [
-    "worker"
-]
-worker = [
-    "dep:worker"
-]
