@@ -19,6 +19,12 @@ impl From<ImageError> for QrPngError {
     }
 }
 
+impl From<QrError> for QrPngError {
+    fn from(value: QrError) -> Self {
+        QrPngError::QrError(value)
+    }
+}
+
 impl std::fmt::Display for QrPngError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
@@ -174,7 +180,8 @@ pub async fn generate_qr_image(
 
     // let qr = QrCode::encode_segments_advanced(&segments, CodeEcc::Medium,
     //     Version::new(5), Version::new(5), Some(Mask::new(2)), false).unwrap();
-    let qr = QrCode::encode_segments_advanced(&segments, error_correction.into(), min_version.into(), max_version.into(), mask, boost_ecl).unwrap();
+    // let qr = QrCode::encode_segments_advanced(&segments, error_correction.into(), min_version.into(), max_version.into(), mask, boost_ecl).unwrap();
+    let qr = QrCode::encode_segments_advanced(&segments, error_correction.into(), min_version.into(), max_version.into(), mask, boost_ecl)?;
     // let png: ImageBuffer<Luma<u8>, Vec<u8>> = qr.render::<Luma<u8>>().build();
     let size = qr.size;
     
