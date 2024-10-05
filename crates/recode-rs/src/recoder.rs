@@ -1,9 +1,10 @@
-use crate::{ColorType, Error, Format, Meta, Outcome};
+use crate::{ColorType, Error, Format, Outcome};
 
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::codecs::webp::WebPEncoder;
 use image::{
-    guess_format, load_from_memory, EncodableLayout, ImageEncoder
+    // guess_format, load_from_memory, EncodableLayout, ImageEncoder
+    guess_format, load_from_memory, ImageEncoder
 };
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -40,8 +41,14 @@ impl Recoder {
         })
     }
 
-    pub fn meta(&self) -> Meta {
-        Meta::new(self.format, self.width, self.height)
+    pub fn to_outcome(&self, new_format: Format, new_data: Vec<u8>) -> Outcome {
+        Outcome {
+            src: self.format,
+            width: self.width,
+            height: self.height,
+            dest: new_format,
+            data: new_data,
+        }
     }
 
     pub fn to_png(&self) -> Result<Outcome, Error> {
@@ -57,14 +64,8 @@ impl Recoder {
         // png_encoder.write_image(image_16bit.as_bytes(), width, height, ColorType::Rgba16)?;
         // png_encoder.write_image(image_16bit.as_bytes(), width, height, ExtendedColorType::Rgba16)?;
         png_encoder.write_image(&self.data, self.width, self.height, self.color.into())?;
-        // Describe the output image metadata
-        let dest_meta = Meta::new(Format::Png, self.width, self.height);
-        // Return the result of the recoding process
-        Ok(Outcome::new(
-            self.meta(),
-            dest_meta,
-            out_buffer.as_bytes().to_vec(),
-        ))
+
+        Ok(self.to_outcome(Format::Png, out_buffer))
     }
 
     pub fn to_webp(&self) -> Result<Outcome, Error> {
@@ -73,14 +74,8 @@ impl Recoder {
         let webp_encoder = WebPEncoder::new_lossless(&mut out_buffer);
         // Try to write the image as a WebP to the buffer
         webp_encoder.write_image(&self.data, self.width, self.height, self.color.into())?;
-        // Describe the output image metadata
-        let dest_meta = Meta::new(Format::WebP, self.width, self.height);
-        // Return the result of the recoding process
-        Ok(Outcome::new(
-            self.meta(),
-            dest_meta,
-            out_buffer.as_bytes().to_vec(),
-        ))
+
+        Ok(self.to_outcome(Format::WebP, out_buffer))
     }
 }
 
