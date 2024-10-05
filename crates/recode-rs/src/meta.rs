@@ -1,6 +1,6 @@
 use crate::Format;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Meta {
     pub format: Format,
     pub width: u32,

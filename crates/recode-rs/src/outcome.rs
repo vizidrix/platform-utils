@@ -1,6 +1,6 @@
 use crate::Meta;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Outcome {
     pub src: Meta,
     pub dest: Meta,

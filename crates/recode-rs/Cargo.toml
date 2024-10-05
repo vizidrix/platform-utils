@@ -5,6 +5,8 @@ authors = ["Perry Birch <perrysd@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-image = { version = "0.25.2", default-features = false, features = [ "gif", "jpeg", "png", "webp" ] }
+# image = { version = "0.25.2", default-features = false, features = [ "gif", "jpeg", "png", "webp" ] }
+image = { version = "0.25.2", default-features = false, features = [ "default-formats" ] }
 imageproc = { version = "0.25.0", default-features = false }
+serde = { version = "1.0", features = ["derive"]}
 # oxipng = { version = "9.0", features = ["parallel", "zopfli", "filetime"], default-features = false }

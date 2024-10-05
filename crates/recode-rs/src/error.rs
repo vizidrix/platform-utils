@@ -1,7 +1,6 @@
 use image::ImageError;
-// use oxipng::PngError;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub enum Error {
     LoadError,
     ImageError(String),
@@ -14,12 +13,6 @@ impl From<ImageError> for Error {
         Error::ImageError(src.to_string())
     }
 }
-
-// impl From<PngError> for Error {
-//     fn from(src: PngError) -> Self {
-//         Error::PngError(src)
-//     }
-// }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
