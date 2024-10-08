@@ -4,7 +4,7 @@ use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::codecs::webp::WebPEncoder;
 use image::{
     // guess_format, load_from_memory, EncodableLayout, ImageEncoder
-    guess_format, load_from_memory, ImageEncoder
+    guess_format, load_from_memory, ImageEncoder //, ImageFormat
 };
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -22,10 +22,16 @@ impl Recoder {
     ///
     /// Known supported formats that aren't implemented here are:
     /// ["avif", "bmp", "dds", "ff"/"farbfeld", "gif", "hdr", "ico", "jpeg", "exr"/"openexr", "png", "pnm", "qoi", "tga", "tiff", "webp"]
-    pub fn new(buffer: &[u8]) -> Result<Self, Error> {
-        // Try to get the image format
-        let format = guess_format(&buffer)
-            .map_err(|_| Error::UnsupportedFormat)?;
+    pub fn new(format: Option<Format>, buffer: &[u8]) -> Result<Self, Error> {
+        let format = match format {
+            Some(f) => f,
+            None => {
+                // Try to get the image format
+                let format = guess_format(&buffer)
+                    .map_err(|_| Error::UnsupportedFormat)?;
+                format.into()
+            }
+        };
         // Try to load an unknown blob of image data
         let dynamic_image = load_from_memory(buffer).map_err(|_| Error::LoadError)?;
         let (width, height) = (dynamic_image.width(), dynamic_image.height());
@@ -33,7 +39,7 @@ impl Recoder {
         let data =  dynamic_image.as_bytes().to_vec();
 
         Ok(Recoder {
-            format: format.try_into()?,
+            format,//: format.try_into()?,
             width,
             height,
             color: color.into(),

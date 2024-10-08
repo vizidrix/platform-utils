@@ -1,5 +1,4 @@
 use image::ImageFormat;
-use crate::Error;
 
 pub static AVIF: &str = "avif";
 pub static BMP: &str = "bmp";
@@ -38,6 +37,24 @@ pub enum Format {
     WebP,
 }
 
+impl Format {
+    pub fn from_extension<S>(ext: S) -> Option<Format>
+    where
+        S: AsRef<std::ffi::OsStr>
+    {
+        image::ImageFormat::from_extension(ext)
+            .map(|o| o.into())
+    }
+
+    pub fn from_mime_type<M>(mime_type: M) -> Option<Format>
+    where
+        M: AsRef<str>
+    {
+        image::ImageFormat::from_mime_type(mime_type)
+            .map(|o| o.into())
+    }
+}
+
 impl ToString for Format {
     fn to_string(&self) -> String {
         match self {
@@ -60,27 +77,50 @@ impl ToString for Format {
     }
 }
 
-impl TryFrom<ImageFormat> for Format {
-    type Error = Error;
-
-    fn try_from(value: ImageFormat) -> Result<Self, Self::Error> {
+impl From<ImageFormat> for Format {
+    fn from(value: ImageFormat) -> Self {
         match value {
-            ImageFormat::Avif => Ok(Format::Avif),
-            ImageFormat::Bmp => Ok(Format::Bmp),
-            ImageFormat::Dds => Ok(Format::Dds),
-            ImageFormat::Farbfeld => Ok(Format::Farbfeld),
-            ImageFormat::Gif => Ok(Format::Gif),
-            ImageFormat::Hdr => Ok(Format::Hdr),
-            ImageFormat::Ico => Ok(Format::Ico),
-            ImageFormat::Jpeg => Ok(Format::Jpeg),
-            ImageFormat::OpenExr => Ok(Format::OpenExr),
-            ImageFormat::Png => Ok(Format::Png),
-            ImageFormat::Pnm => Ok(Format::Pnm),
-            ImageFormat::Qoi => Ok(Format::Qoi),
-            ImageFormat::Tga => Ok(Format::Tga),
-            ImageFormat::Tiff => Ok(Format::Tiff),
-            ImageFormat::WebP => Ok(Format::WebP),
-            _ => Err(Error::UnsupportedFormat)
+            ImageFormat::Avif => Format::Avif,
+            ImageFormat::Bmp => Format::Bmp,
+            ImageFormat::Dds => Format::Dds,
+            ImageFormat::Farbfeld => Format::Farbfeld,
+            ImageFormat::Gif => Format::Gif,
+            ImageFormat::Hdr => Format::Hdr,
+            ImageFormat::Ico => Format::Ico,
+            ImageFormat::Jpeg => Format::Jpeg,
+            ImageFormat::OpenExr => Format::OpenExr,
+            ImageFormat::Png => Format::Png,
+            ImageFormat::Pnm => Format::Pnm,
+            ImageFormat::Qoi => Format::Qoi,
+            ImageFormat::Tga => Format::Tga,
+            ImageFormat::Tiff => Format::Tiff,
+            ImageFormat::WebP => Format::WebP,
+            _ => Format::WebP,
         }
     }
 }
+
+// impl TryFrom<ImageFormat> for Format {
+//     type Error = Error;
+
+//     fn try_from(value: ImageFormat) -> Result<Self, Self::Error> {
+//         match value {
+//             ImageFormat::Avif => Ok(Format::Avif),
+//             ImageFormat::Bmp => Ok(Format::Bmp),
+//             ImageFormat::Dds => Ok(Format::Dds),
+//             ImageFormat::Farbfeld => Ok(Format::Farbfeld),
+//             ImageFormat::Gif => Ok(Format::Gif),
+//             ImageFormat::Hdr => Ok(Format::Hdr),
+//             ImageFormat::Ico => Ok(Format::Ico),
+//             ImageFormat::Jpeg => Ok(Format::Jpeg),
+//             ImageFormat::OpenExr => Ok(Format::OpenExr),
+//             ImageFormat::Png => Ok(Format::Png),
+//             ImageFormat::Pnm => Ok(Format::Pnm),
+//             ImageFormat::Qoi => Ok(Format::Qoi),
+//             ImageFormat::Tga => Ok(Format::Tga),
+//             ImageFormat::Tiff => Ok(Format::Tiff),
+//             ImageFormat::WebP => Ok(Format::WebP),
+//             _ => Err(Error::UnsupportedFormat)
+//         }
+//     }
+// }
