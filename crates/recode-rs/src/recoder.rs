@@ -2,10 +2,12 @@ use crate::{ColorType, Error, Format, Outcome};
 
 use image::codecs::png::{CompressionType, FilterType, PngEncoder};
 use image::codecs::webp::WebPEncoder;
-use image::{
-    // guess_format, load_from_memory, EncodableLayout, ImageEncoder
-    guess_format, load_from_memory, ImageEncoder //, ImageFormat
-};
+use image::ImageEncoder;
+// use image::{
+//     // guess_format, load_from_memory, EncodableLayout, ImageEncoder
+//     // guess_format, load_from_memory, ImageEncoder //, ImageFormat
+    
+// };
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Recoder {
@@ -23,23 +25,45 @@ impl Recoder {
     /// Known supported formats that aren't implemented here are:
     /// ["avif", "bmp", "dds", "ff"/"farbfeld", "gif", "hdr", "ico", "jpeg", "exr"/"openexr", "png", "pnm", "qoi", "tga", "tiff", "webp"]
     pub fn new(format: Option<Format>, buffer: &[u8]) -> Result<Self, Error> {
-        let format = match format {
-            Some(f) => f,
+        // let format = match format {
+        //     Some(f) => f,
+        //     None => {
+        //         // Try to get the image format
+        //         let format = guess_format(&buffer)
+        //             .map_err(|_| Error::UnsupportedFormat)?;
+        //         format.into()
+        //     }
+        // };
+        // Try to load an unknown blob of image data
+        // let dynamic_image = load_from_memory(buffer)
+        //     .map_err(|_| Error::LoadError)?;
+        let cursor = std::io::Cursor::new(buffer);
+        let reader = match format {
+            Some(f) => {
+                image::ImageReader::with_format(cursor, f.into())
+                    // .with_guessed_format()
+                    // .expect("Cursor io never fails")
+            }
             None => {
-                // Try to get the image format
-                let format = guess_format(&buffer)
-                    .map_err(|_| Error::UnsupportedFormat)?;
-                format.into()
+                image::ImageReader::new(cursor)
+                    .with_guessed_format()
+                    .expect("Cursor io never fails")
             }
         };
-        // Try to load an unknown blob of image data
-        let dynamic_image = load_from_memory(buffer).map_err(|_| Error::LoadError)?;
+        let format = match reader.format() {
+            Some(f) => f,
+            None => {
+                return Err(Error::LoadError);
+            }
+        };
+        // assert_eq!(reader.format(), format);
+        let dynamic_image = reader.decode()?;
         let (width, height) = (dynamic_image.width(), dynamic_image.height());
         let color = dynamic_image.color();
         let data =  dynamic_image.as_bytes().to_vec();
 
         Ok(Recoder {
-            format,//: format.try_into()?,
+            format: format.into(),//: reader.format().expect("Should have figured"),//: format.try_into()?,
             width,
             height,
             color: color.into(),

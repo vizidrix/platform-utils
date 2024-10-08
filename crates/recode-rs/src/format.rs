@@ -77,6 +77,29 @@ impl ToString for Format {
     }
 }
 
+impl From<Format> for ImageFormat {
+    fn from(value: Format) -> Self {
+        match value {
+            Format::Avif => ImageFormat::Avif,
+            Format::Bmp => ImageFormat::Bmp,
+            Format::Dds => ImageFormat::Dds,
+            Format::Farbfeld => ImageFormat::Farbfeld,
+            Format::Gif => ImageFormat::Gif,
+            Format::Hdr => ImageFormat::Hdr,
+            Format::Ico => ImageFormat::Ico,
+            Format::Jpeg => ImageFormat::Jpeg,
+            Format::OpenExr => ImageFormat::OpenExr,
+            Format::Png => ImageFormat::Png,
+            Format::Pnm => ImageFormat::Pnm,
+            Format::Qoi => ImageFormat::Qoi,
+            Format::Tga => ImageFormat::Tga,
+            Format::Tiff => ImageFormat::Tiff,
+            Format::WebP => ImageFormat::WebP,
+            // _ => ImageFormat::WebP,
+        }
+    }
+}
+
 impl From<ImageFormat> for Format {
     fn from(value: ImageFormat) -> Self {
         match value {
