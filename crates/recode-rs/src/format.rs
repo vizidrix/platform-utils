@@ -16,6 +16,7 @@ pub static TGA: &str = "tga";
 pub static TIFF: &str = "tiff";
 pub static WEBP: &str = "webp";
 
+// https://www.iana.org/assignments/media-types/media-types.xhtml#image
 // ["avif", "bmp", "dds", "exr", "ff", "gif", "hdr", "ico", "jpeg", "png", "pnm", "qoi", "tga", "tiff", "webp"]
 
 #[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
@@ -52,6 +53,16 @@ impl Format {
     {
         image::ImageFormat::from_mime_type(mime_type)
             .map(|o| o.into())
+    }
+
+    pub fn to_mime_type(&self) -> &'static str {
+        let inner: &ImageFormat = self.into();
+        inner.to_mime_type()
+    }
+
+    pub fn extensions_str(self) -> &'static [&'static str] {
+        let inner: ImageFormat = self.into();
+        inner.extensions_str()
     }
 }
 
@@ -119,6 +130,52 @@ impl From<ImageFormat> for Format {
             ImageFormat::Tiff => Format::Tiff,
             ImageFormat::WebP => Format::WebP,
             _ => Format::WebP,
+        }
+    }
+}
+
+impl From<&Format> for &ImageFormat {
+    fn from(value: &Format) -> Self {
+        match value {
+            Format::Avif => &ImageFormat::Avif,
+            Format::Bmp => &ImageFormat::Bmp,
+            Format::Dds => &ImageFormat::Dds,
+            Format::Farbfeld => &ImageFormat::Farbfeld,
+            Format::Gif => &ImageFormat::Gif,
+            Format::Hdr => &ImageFormat::Hdr,
+            Format::Ico => &ImageFormat::Ico,
+            Format::Jpeg => &ImageFormat::Jpeg,
+            Format::OpenExr => &ImageFormat::OpenExr,
+            Format::Png => &ImageFormat::Png,
+            Format::Pnm => &ImageFormat::Pnm,
+            Format::Qoi => &ImageFormat::Qoi,
+            Format::Tga => &ImageFormat::Tga,
+            Format::Tiff => &ImageFormat::Tiff,
+            Format::WebP => &ImageFormat::WebP,
+            // _ => ImageFormat::WebP,
+        }
+    }
+}
+
+impl From<&ImageFormat> for &Format {
+    fn from(value: &ImageFormat) -> Self {
+        match value {
+            ImageFormat::Avif => &Format::Avif,
+            ImageFormat::Bmp => &Format::Bmp,
+            ImageFormat::Dds => &Format::Dds,
+            ImageFormat::Farbfeld => &Format::Farbfeld,
+            ImageFormat::Gif => &Format::Gif,
+            ImageFormat::Hdr => &Format::Hdr,
+            ImageFormat::Ico => &Format::Ico,
+            ImageFormat::Jpeg => &Format::Jpeg,
+            ImageFormat::OpenExr => &Format::OpenExr,
+            ImageFormat::Png => &Format::Png,
+            ImageFormat::Pnm => &Format::Pnm,
+            ImageFormat::Qoi => &Format::Qoi,
+            ImageFormat::Tga => &Format::Tga,
+            ImageFormat::Tiff => &Format::Tiff,
+            ImageFormat::WebP => &Format::WebP,
+            _ => &Format::WebP,
         }
     }
 }
