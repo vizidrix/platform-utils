@@ -29,7 +29,7 @@ use crate::{
 ///   appropriate version number, and call the `QrCode::encode_codewords()` constructor.
 ///
 /// (Note that all ways require supplying the desired error correction level.)
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QrCode {
     // Scalar parameters:
 

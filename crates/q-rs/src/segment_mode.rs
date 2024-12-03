@@ -1,7 +1,7 @@
 use crate::version::Version;
 
 /// Describes how a segment's data bits are interpreted.
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SegmentMode {
     Numeric,
     Alphanumeric,

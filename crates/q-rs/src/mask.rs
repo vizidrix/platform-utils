@@ -1,5 +1,5 @@
 /// A number between 0 and 7 (inclusive).
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Mask(u8);
 
 impl Mask {

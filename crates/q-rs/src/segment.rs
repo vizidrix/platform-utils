@@ -15,7 +15,7 @@ use crate::ALPHANUMERIC_CHARSET;
 /// This segment struct imposes no length restrictions, but QR Codes have restrictions.
 /// Even in the most favorable conditions, a QR Code can only hold 7089 characters of data.
 /// Any segment longer than this is meaningless for the purpose of generating QR Codes.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Segment {
     // The mode indicator of this segment. Accessed through mode().
     pub mode: SegmentMode,

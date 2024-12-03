@@ -5,3 +5,4 @@ authors = ["Perry Birch <perrysd@gmail.com>"]
 edition = "2021"
 
 [dependencies]
+thiserror = "2.0.4"

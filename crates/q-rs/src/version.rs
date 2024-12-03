@@ -1,5 +1,5 @@
 /// A number between 1 and 40 (inclusive).
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Version(u8);
 
 impl Version {
