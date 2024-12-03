@@ -1,44 +1,14 @@
 use std::io::Cursor;
 use serde::{Serialize, Deserialize};
 
-use image::{ ImageBuffer, DynamicImage, ImageFormat, ImageError };//, ImageOutputFormat };
+use image::{ ImageBuffer, DynamicImage, ImageFormat };//, ImageOutputFormat };
 use image::imageops::resize;
 use q_rs::*;
 
-#[derive(Debug)]
-pub enum QrPngError {
-    ImageError(ImageError),
-    QrError(q_rs::QrError),
-}
+mod error;
+pub use error::*;
 
-impl std::error::Error for QrPngError {}
-
-impl From<ImageError> for QrPngError {
-    fn from(src: ImageError) -> Self {
-        QrPngError::ImageError(src)
-    }
-}
-
-impl From<QrError> for QrPngError {
-    fn from(value: QrError) -> Self {
-        QrPngError::QrError(value)
-    }
-}
-
-impl std::fmt::Display for QrPngError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            Self::ImageError(err) => {
-                write!(f, "{:?}", err)
-            },
-            Self::QrError(err) => {
-                write!(f, "{:?}", err)
-            },
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 pub enum ColorTemplate {
     BlackOnWhite,
     BlackOnTransparant,
@@ -67,7 +37,7 @@ impl Default for ColorTemplate {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 pub struct DensityVersion(u8);
 
 impl DensityVersion {
@@ -89,7 +59,7 @@ impl From<DensityVersion> for Version {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 pub enum ErrorCorrection {
     /// The QR Code can tolerate about  7% erroneous codewords.
     Low,
@@ -132,7 +102,7 @@ impl From<ErrorCorrection> for CodeEcc {
 ///
 /// Returns a wrapped `QrCode` if successful, or `Err` if the data is too
 /// long to fit in any version in the given range at the given ECC level.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Serialize, Deserialize)]
 pub struct QROptions {
     // Sets the colors used for the foreground and background
     pub color_template: Option<ColorTemplate>,
@@ -178,31 +148,20 @@ pub async fn generate_qr_image(
     let mask = options.mask.map(|v| Mask::new(v));
     let boost_ecl = options.boost_ecl;
 
-    // let qr = QrCode::encode_segments_advanced(&segments, CodeEcc::Medium,
-    //     Version::new(5), Version::new(5), Some(Mask::new(2)), false).unwrap();
-    // let qr = QrCode::encode_segments_advanced(&segments, error_correction.into(), min_version.into(), max_version.into(), mask, boost_ecl).unwrap();
     let qr = QrCode::encode_segments_advanced(&segments, error_correction.into(), min_version.into(), max_version.into(), mask, boost_ecl)?;
-    // let png: ImageBuffer<Luma<u8>, Vec<u8>> = qr.render::<Luma<u8>>().build();
     let size = qr.size;
     
     let (on, off) = color_template.into_colors();
     let png = ImageBuffer::from_fn(size as u32, size as u32, |x, y| {
         if qr.get_module(x as i32, y as i32) {
-            // image::LumaA([0u8, 0u8])
-            // image::Luma([0u8])
             on
         } else {
             off
-            // image::LumaA([255u8, 255u8])
-            // image::Luma([255u8])
         }
     });
-    // let scale = 8;
     let resized = resize(&png, (size * scale) as u32, (size * scale) as u32, image::imageops::FilterType::Nearest);
     let mut w = Cursor::new(Vec::new());
-    // DynamicImage::ImageLuma8(resized)
     DynamicImage::ImageLumaA8(resized)
-        // .write_to(&mut w, ImageOutputFormat::Png)
         .write_to(&mut w, ImageFormat::Png)?;
     let vec: Vec<_> = w.into_inner();
     Ok(vec)
